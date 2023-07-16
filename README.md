@@ -49,9 +49,9 @@ npx prisma db seed
 
 ```bash
 # development
-$ npm run start
+npm run start
 
 # watch mode
-$ npm run start:dev
+npm run start:dev
 
 ```

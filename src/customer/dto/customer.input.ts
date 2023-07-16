@@ -1,4 +1,4 @@
-import { Field, InputType, Int } from '@nestjs/graphql';
+import { Field, InputType, Int, PartialType } from '@nestjs/graphql';
 import { Prisma } from '@prisma/client';
 
 @InputType()
@@ -30,3 +30,24 @@ export class GetCustomerInput {
   @Field(() => WhereCustomerInput, { nullable: true })
   where: WhereCustomerInput;
 }
+
+@InputType()
+export class CreateCustomerInput {
+  @Field(() => String, { nullable: true })
+  id?: string;
+
+  @Field(() => String, { nullable: false })
+  email: string;
+
+  @Field(() => String, { nullable: false })
+  password: string;
+
+  @Field(() => Date, { nullable: true })
+  createdAt?: Date;
+
+  @Field(() => Date, { nullable: true })
+  updatedAt?: Date;
+}
+
+@InputType()
+export class UpdateCustomerInput extends PartialType(CreateCustomerInput) {}

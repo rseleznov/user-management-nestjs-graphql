@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
+import { CustomerResolver } from 'src/customer/customer.resolver';
 import { CustomerService } from './customer.service';
 import { PrismaService } from 'src/prisma.service';
-import { CustomerResolver } from './customer.resolver';
 
 @Module({
   imports: [],
