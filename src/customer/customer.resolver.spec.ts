@@ -1,17 +1,20 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CustomerResolver } from 'src/customer/customer.resolver';
 import { CustomerService } from 'src/customer/customer.service';
 import { PrismaService } from 'src/prisma.service';
 import restoreAllMocks = jest.restoreAllMocks;
 
 describe('CustomerService', () => {
   let service: CustomerService;
+  let resolver: CustomerResolver;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [CustomerService, PrismaService],
+      providers: [CustomerResolver, CustomerService, PrismaService],
     }).compile();
 
     service = module.get<CustomerService>(CustomerService);
+    resolver = module.get<CustomerResolver>(CustomerResolver);
   });
 
   afterEach(async () => {
@@ -19,7 +22,7 @@ describe('CustomerService', () => {
   });
 
   it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(resolver).toBeDefined();
   });
 
   describe('customers', () => {
@@ -42,15 +45,16 @@ describe('CustomerService', () => {
       ];
       jest.spyOn(service, 'findAll').mockResolvedValue(expectedResult);
 
-      const result = await service.findAll();
+      const result = await resolver.customers({});
       expect(result).toEqual(expectedResult);
     });
   });
 
   describe('customerById', () => {
     it('should return a customer by ID', async () => {
+      const id = '9e391faf-64b2-4d4c-b879-463532920fd3';
       const expectedResult = {
-        id: '9e391faf-64b2-4d4c-b879-463532920fd3',
+        id,
         email: 'user@gmail.com',
         password: 'random-password',
         createdAt: new Date('Jul 13, 2023, 6:20:44 PM'),
@@ -58,25 +62,24 @@ describe('CustomerService', () => {
       };
       jest.spyOn(service, 'findById').mockResolvedValue(expectedResult);
 
-      const result = await service.findById(
-        '9e391faf-64b2-4d4c-b879-463532920fd3',
-      );
+      const result = await resolver.getCustomer(id, undefined);
       expect(result).toEqual(expectedResult);
     });
   });
 
   describe('customerByEmail', () => {
     it('should return a customer by Email', async () => {
+      const email = 'user@gmail.com';
       const expectedResult = {
         id: '9e391faf-64b2-4d4c-b879-463532920fd3',
-        email: 'user@gmail.com',
+        email,
         password: 'random-password',
         createdAt: new Date('Jul 13, 2023, 6:20:44 PM'),
         updatedAt: new Date('Jul 13, 2023, 6:20:44 PM'),
       };
       jest.spyOn(service, 'findByEmail').mockResolvedValue(expectedResult);
 
-      const result = await service.findByEmail('user@gmail.com');
+      const result = await resolver.getCustomer(undefined, email);
       expect(result).toEqual(expectedResult);
     });
   });
@@ -99,7 +102,7 @@ describe('CustomerService', () => {
       };
       jest.spyOn(service, 'create').mockResolvedValue(expectedResult);
 
-      const result = await service.create(newCustomer);
+      const result = await resolver.createCustomer(newCustomer);
       expect(result).toEqual(expectedResult);
     });
   });
@@ -123,7 +126,7 @@ describe('CustomerService', () => {
       };
       jest.spyOn(service, 'updateById').mockResolvedValue(expectedResult);
 
-      const result = await service.updateById(id, newCustomer);
+      const result = await resolver.updateCustomer(newCustomer, id);
       expect(result).toEqual(expectedResult);
     });
   });
@@ -147,7 +150,11 @@ describe('CustomerService', () => {
       };
       jest.spyOn(service, 'updateByEmail').mockResolvedValue(expectedResult);
 
-      const result = await service.updateByEmail(email, newCustomer);
+      const result = await resolver.updateCustomer(
+        newCustomer,
+        undefined,
+        email,
+      );
       expect(result).toEqual(expectedResult);
     });
   });
@@ -164,7 +171,7 @@ describe('CustomerService', () => {
       };
       jest.spyOn(service, 'deleteById').mockResolvedValue(expectedResult);
 
-      const result = await service.deleteById(id);
+      const result = await resolver.deleteCustomer(id, undefined);
       expect(result).toEqual(expectedResult);
     });
   });
@@ -181,7 +188,7 @@ describe('CustomerService', () => {
       };
       jest.spyOn(service, 'deleteByEmail').mockResolvedValue(expectedResult);
 
-      const result = await service.deleteByEmail(email);
+      const result = await resolver.deleteCustomer(undefined, email);
       expect(result).toEqual(expectedResult);
     });
   });

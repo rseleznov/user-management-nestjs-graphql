@@ -22,13 +22,13 @@ export class GetCustomerInput {
   cursor?: Prisma.CustomerWhereUniqueInput;
 
   @Field(() => Int, { nullable: true })
-  skip: number;
+  skip?: number;
 
   @Field(() => Int, { nullable: true })
-  take: number;
+  take?: number;
 
   @Field(() => WhereCustomerInput, { nullable: true })
-  where: WhereCustomerInput;
+  where?: WhereCustomerInput;
 }
 
 @InputType()

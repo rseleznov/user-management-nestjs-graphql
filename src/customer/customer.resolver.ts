@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { isUUID } from 'class-validator';
-import { Customer } from 'lib/entities/customer.entity';
+import { Customer } from 'src/lib/entities/customer.entity';
 import { CustomerService } from './customer.service';
 import {
   CreateCustomerInput,
