@@ -47,6 +47,9 @@ export class CreateCustomerInput {
 
   @Field(() => Date, { nullable: true })
   updatedAt?: Date;
+
+  @Field(() => String, { nullable: true })
+  activationCode?: string;
 }
 
 @InputType()

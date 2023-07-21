@@ -8,4 +8,7 @@ export class Customer extends Base {
 
   @Field(() => String)
   password: string;
+
+  @Field(() => String)
+  activationCode?: string;
 }

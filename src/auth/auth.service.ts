@@ -1,12 +1,13 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as process from 'process';
 import { env } from 'process';
+import * as crypto from 'crypto';
 import { Customer } from 'src/lib/entities/customer.entity';
 import { RefreshToken } from 'src/lib/entities/refreshToken.entity';
 import { RefreshTokenInput } from 'src/auth/dto/refreshToken.input';
@@ -23,12 +24,22 @@ export class AuthService {
 
   async signIn(emailInput: string, passwordInput: string) {
     const customer = await this.customerService.findByEmail(emailInput);
-    const { password, ...result } = customer;
-    if (password !== passwordInput) {
+    if (!customer) {
+      throw new NotFoundException();
+    }
+    if (customer.activationCode) {
+      throw new BadRequestException('The customer does not activated.', {
+        cause: new Error(),
+        description: 'The customer does not activated.',
+      });
+    }
+    if (customer.password !== passwordInput) {
       throw new UnauthorizedException();
     }
+    delete customer['password'];
+    delete customer['activationCode'];
     return {
-      accessToken: await this.createAccessToken(result),
+      accessToken: await this.createAccessToken(customer),
       refreshToken: await this.createRefreshToken(customer.id),
     };
   }
@@ -38,15 +49,36 @@ export class AuthService {
     if (customerExist) {
       throw new ConflictException();
     }
-    const customer: Partial<Customer> = await this.customerService.create({
+    const activationCode = this.generateActivationCode();
+    const customer = await this.customerService.create({
       email: emailInput,
       password: passwordInput,
+      activationCode,
     });
-    delete customer['password'];
-    return {
-      accessToken: await this.createAccessToken(customer),
-      refreshToken: await this.createRefreshToken(customer.id),
-    };
+    return { id: customer.id, code: activationCode };
+  }
+
+  async activate(customerIdInput: string, activationCodeInput: string) {
+    const customerExist = await this.customerService.findById(customerIdInput);
+    if (!customerExist) {
+      throw new NotFoundException();
+    }
+    if (!customerExist.activationCode) {
+      throw new BadRequestException('The customer is already activated.', {
+        cause: new Error(),
+        description: 'The customer is already activated.',
+      });
+    }
+    if (customerExist.activationCode !== activationCodeInput) {
+      throw new BadRequestException('Wrong activation code.', {
+        cause: new Error(),
+        description: 'Wrong activation code.',
+      });
+    } else {
+      await this.customerService.updateById(customerIdInput, {
+        activationCode: null,
+      });
+    }
   }
 
   async createAccessToken(customer: Partial<Customer>) {
@@ -59,9 +91,7 @@ export class AuthService {
     });
     const currentDate = new Date();
     const expiresAt = new Date(currentDate);
-    expiresAt.setDate(
-      currentDate.getDate() + Number(process.env.REFRESH_TOKEN_TIME),
-    );
+    expiresAt.setDate(currentDate.getDate() + Number(env.REFRESH_TOKEN_TIME));
     const refreshToken = await this.prismaService.refreshToken.create({
       data: { customer: { connect: { id: customerId } }, expiresAt },
     });
@@ -97,5 +127,9 @@ export class AuthService {
       accessToken: await this.createAccessToken(customerExist),
       refreshToken: await this.createRefreshToken(customerExist.id),
     };
+  }
+
+  generateActivationCode() {
+    return crypto.randomBytes(8).toString('hex');
   }
 }
