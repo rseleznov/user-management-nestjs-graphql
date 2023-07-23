@@ -6,8 +6,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { env } from 'process';
 import * as crypto from 'crypto';
+import {
+  createAccessToken,
+  createRefreshToken,
+  decodeRefreshToken,
+} from 'src/auth/auth.utils';
 import { Customer } from 'src/lib/entities/customer.entity';
 import { RefreshToken } from 'src/lib/entities/refreshToken.entity';
 import { RefreshTokenInput } from 'src/auth/dto/refreshToken.input';
@@ -39,8 +43,12 @@ export class AuthService {
     delete customer['password'];
     delete customer['activationCode'];
     return {
-      accessToken: await this.createAccessToken(customer),
-      refreshToken: await this.createRefreshToken(customer.id),
+      accessToken: await createAccessToken(customer, this.jwtService),
+      refreshToken: await createRefreshToken(
+        customer.id,
+        this.jwtService,
+        this.prismaService,
+      ),
     };
   }
 
@@ -81,39 +89,11 @@ export class AuthService {
     }
   }
 
-  async createAccessToken(customer: Partial<Customer>) {
-    return await this.jwtService.signAsync(customer);
-  }
-
-  async createRefreshToken(customerId: string) {
-    await this.prismaService.refreshToken.deleteMany({
-      where: { customerId },
-    });
-    const currentDate = new Date();
-    const expiresAt = new Date(currentDate);
-    expiresAt.setDate(currentDate.getDate() + Number(env.REFRESH_TOKEN_TIME));
-    const refreshToken = await this.prismaService.refreshToken.create({
-      data: { customer: { connect: { id: customerId } }, expiresAt },
-    });
-    return await this.jwtService.signAsync(refreshToken);
-  }
-
-  async decodeRefreshToken(refreshToken: string) {
-    const decodedToken: RefreshToken = this.jwtService.verify(refreshToken, {
-      secret: env.JWT_SECRET,
-    });
-    const refreshTokenExist = await this.prismaService.refreshToken.findUnique({
-      where: { id: decodedToken.id },
-    });
-    if (!refreshTokenExist || refreshTokenExist.expiresAt <= new Date()) {
-      throw new UnauthorizedException();
-    }
-    return decodedToken;
-  }
-
   async refreshToken(refreshTokenInput: RefreshTokenInput) {
-    const decodedToken: RefreshToken = await this.decodeRefreshToken(
+    const decodedToken: RefreshToken = await decodeRefreshToken(
       refreshTokenInput.refreshToken,
+      this.jwtService,
+      this.prismaService,
     );
     const customerExist: Customer = await this.customerService.findById(
       decodedToken.customerId,
@@ -124,8 +104,12 @@ export class AuthService {
     delete customerExist['password'];
 
     return {
-      accessToken: await this.createAccessToken(customerExist),
-      refreshToken: await this.createRefreshToken(customerExist.id),
+      accessToken: await createAccessToken(customerExist, this.jwtService),
+      refreshToken: await createRefreshToken(
+        customerExist.id,
+        this.jwtService,
+        this.prismaService,
+      ),
     };
   }
 

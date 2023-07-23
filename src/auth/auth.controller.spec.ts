@@ -53,19 +53,18 @@ describe('AuthController', () => {
 
   describe('signUn', () => {
     it('should sign up a customer and return the access token', async () => {
-      const mockAccessToken = 'mock-access-token';
-      const mockRefreshToken = 'mock-access-token';
+      const mockActivationCode = {
+        id: 'dfeaa66d-4bff-47b5-b766-229aa65a2607',
+        code: '962da2659d6694e8',
+      };
       const email = 'user@example.com';
       const password = 'password123';
-      jest.spyOn(service, 'signUp').mockResolvedValue({
-        accessToken: mockAccessToken,
-        refreshToken: mockRefreshToken,
-      });
+      jest.spyOn(service, 'signUp').mockResolvedValue(mockActivationCode);
 
       const response = await controller.signUp({ email, password });
 
       expect(response).toBeDefined();
-      expect(response.accessToken).toBe(mockAccessToken);
+      expect(response).toBe(mockActivationCode);
     });
   });
 });

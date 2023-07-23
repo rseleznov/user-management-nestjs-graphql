@@ -1,5 +1,6 @@
 import { Field, ObjectType } from '@nestjs/graphql';
 import { Base } from 'src/lib/entities/base.entity';
+import { Role } from '.prisma/client';
 
 @ObjectType()
 export class Customer extends Base {
@@ -11,4 +12,7 @@ export class Customer extends Base {
 
   @Field(() => String)
   activationCode?: string;
+
+  @Field(() => [Role])
+  roles?: Role[];
 }

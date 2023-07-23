@@ -1,6 +1,7 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, UseGuards } from '@nestjs/common';
 import { Args, ID, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { isUUID } from 'class-validator';
+import { GqlRoleGuard } from 'src/auth/role.guard';
 import { Customer } from 'src/lib/entities/customer.entity';
 import { CustomerService } from './customer.service';
 import {
@@ -35,6 +36,7 @@ export class CustomerResolver {
     }
   }
 
+  @UseGuards(GqlRoleGuard)
   @Mutation(() => Customer)
   async createCustomer(
     @Args('createCustomerInput') createCustomerInput: CreateCustomerInput,
@@ -42,6 +44,7 @@ export class CustomerResolver {
     return this.customerService.create(createCustomerInput);
   }
 
+  @UseGuards(GqlRoleGuard)
   @Mutation(() => Customer)
   async updateCustomer(
     @Args('updateCustomerInput') updateCustomerInput: UpdateCustomerInput,
@@ -57,6 +60,7 @@ export class CustomerResolver {
     }
   }
 
+  @UseGuards(GqlRoleGuard)
   @Mutation(() => Customer)
   async deleteCustomer(
     @Args({ name: 'id', type: () => ID, nullable: true }) id?: string,

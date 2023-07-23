@@ -1,5 +1,16 @@
-import { Field, InputType, Int, PartialType } from '@nestjs/graphql';
+import {
+  Field,
+  InputType,
+  Int,
+  PartialType,
+  registerEnumType,
+} from '@nestjs/graphql';
 import { Prisma } from '@prisma/client';
+import { Role } from '.prisma/client';
+
+registerEnumType(Role, {
+  name: 'Role',
+});
 
 @InputType()
 export class WhereCustomerInput {
@@ -50,6 +61,9 @@ export class CreateCustomerInput {
 
   @Field(() => String, { nullable: true })
   activationCode?: string;
+
+  @Field(() => [Role], { nullable: true })
+  roles?: Role[];
 }
 
 @InputType()

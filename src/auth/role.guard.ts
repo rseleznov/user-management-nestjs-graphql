@@ -7,9 +7,10 @@ import {
 import { GqlContextType, GqlExecutionContext } from '@nestjs/graphql';
 import { JwtService } from '@nestjs/jwt';
 import { env } from 'process';
+import { Role } from '.prisma/client';
 
 @Injectable()
-export class GqlAuthGuard implements CanActivate {
+export class GqlRoleGuard implements CanActivate {
   constructor(private jwtService: JwtService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -18,17 +19,21 @@ export class GqlAuthGuard implements CanActivate {
     }
     const ctx = GqlExecutionContext.create(context);
     const req = ctx.getContext().req;
+    if (!req.body.query.trim().startsWith('mutation')) {
+      return true;
+    }
     const headers = req.headers;
     const [type, token] = headers?.authorization?.split(' ') ?? [];
     if (type !== 'Bearer' || !token) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Authentication token not found');
     }
-    try {
-      req['customer'] = await this.jwtService.verifyAsync(token, {
-        secret: env.JWT_SECRET,
-      });
-    } catch {
-      throw new UnauthorizedException();
+    const customer = this.jwtService.verify(token, {
+      secret: env.JWT_SECRET,
+    });
+    if (!customer || !customer.roles.includes(Role.ADMIN)) {
+      throw new UnauthorizedException(
+        'Not authorized to perform this operation.',
+      );
     }
     return true;
   }

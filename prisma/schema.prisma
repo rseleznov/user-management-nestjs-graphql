@@ -11,6 +11,11 @@ datasource db {
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
+enum Role {
+  ADMIN @map("ADMIN")
+  USER  @map("USER")
+}
+
 model Customer {
   id             String         @id @unique @default(uuid())
   email          String         @unique
@@ -19,6 +24,7 @@ model Customer {
   updatedAt      DateTime       @updatedAt
   refreshToken   RefreshToken[]
   activationCode String?        @db.VarChar(16)
+  roles          Role[]         @default([USER])
 }
 
 model RefreshToken {

@@ -13,12 +13,18 @@ type Customer {
   email: String!
   password: String!
   activationCode: String!
+  roles: [Role!]!
 }
 
 """
 `Date` type as integer. Type represents date and time as number of milliseconds from start of UNIX epoch.
 """
 scalar Timestamp
+
+enum Role {
+  ADMIN
+  USER
+}
 
 type Query {
   customers(data: GetCustomerInput!): [Customer!]!
@@ -52,6 +58,7 @@ input CreateCustomerInput {
   createdAt: Timestamp
   updatedAt: Timestamp
   activationCode: String
+  roles: [Role!]
 }
 
 input UpdateCustomerInput {
@@ -61,4 +68,5 @@ input UpdateCustomerInput {
   createdAt: Timestamp
   updatedAt: Timestamp
   activationCode: String
+  roles: [Role!]
 }
